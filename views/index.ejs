@@ -1,10 +1,15 @@
 <html>
   <body>
     <ul>
+      <a href="/?sortBy=year">Sort by Year</a>
+      <a href="/?sortBy=season">Sort by Season</a>
+      <a href="/?sortBy=county">Sort by County</a>
+      <a href="/?sortBy=report_number">Sort by Report number</a>
+      <a href="/?sortBy=state">Sort by State</a>
       <!-- Create an <li> element for each user in users -->
-      <% sightings.forEach((sight,i) => { %>
-      <a href="/sightings/<%=i%>">Sighting <%=i%></a
-      ><br />
+      <% sightings.forEach((sight) => { %>
+      <br />
+      <a href="/sightings/<%=sight.index%>">Sighting <%=sight.index%></a>
       <% }); %>
     </ul>
   </body>

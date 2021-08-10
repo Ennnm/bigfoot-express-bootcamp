@@ -4,49 +4,57 @@ import { read } from './jsonFileStorage.mjs';
 const app = express();
 app.set('view engine', 'ejs');
 
+const sightingText = (year, state, observed) => `
+        <h1 style="text-align: center">Big Foot Sighting</h1>
+        <ul>
+        <li> Year: ${year}</li>
+        <li> State: ${state}</li>
+        <li> Observed: ${observed}</li>
+        </ul>
+    `;
 const handleIncomingRequest = (request, response) => {
   read('data.json', (err, data) => {
     console.log(data.sightings.length);
     const { index } = request.params;
-    // eslint-disable-next-line no-param-reassign
-    const content = `<html>
-      <body>
-        <h1 style="text-align: center">Big Foot Sighting</h1>
-        <ul>
-        <li> Year: ${data.sightings[index].YEAR}</li>
-        <li> State: ${data.sightings[index].STATE}</li>
-        <li> Observed: ${data.sightings[index].OBSERVED}</li>
-        </ul>
-      </body>
-    </html>`;
+    const refSight = data.sightings[index];
+    const content = sightingText(refSight.YEAR, refSight.STATE, refSight.OBSERVED);
     response.send(content);
   });
 };
 
 const handleYear = (req, res) => {
-  const yearlyReport = [];
+  let yearlyReport = '';
   read('data.json', (err, data) => {
     const { sightings } = data;
-    for (let i = 0; i < sightings.length; i += 1) {
-      const refSightings = sightings[i];
-      if (refSightings.YEAR === req.params.year.toString()) {
-        const sightingsObj = { YEAR: refSightings.YEAR, STATE: refSightings.STATE };
-        yearlyReport.push(sightingsObj);
-      }
-    }
+    const sightingByYear = sightings.filter((sight) => sight.YEAR === req.params.year.toString());
+    sightingByYear.forEach((sight) => {
+      yearlyReport += sightingText(
+        sight.YEAR,
+        sight.STATE,
+        sight.OBSERVED,
+      );
+    });
+
     res.send(yearlyReport);
-    console.log(yearlyReport.length);
   });
 };
 
 const handleIndex = (req, res) => {
+  let attr = req.query.sortBy;
+
   read('data.json', (err, data) => {
     const { sightings } = data;
-    sightings.forEach((sight, i) => {
-      sight.index = i;
+    sightings.forEach((sighting, i) => {
+      sighting.index = i;
     });
-    console.log(err);
-
+    if (attr) {
+      attr = attr.toUpperCase();
+      if (attr === 'YEAR' || attr === 'REPORT_NUMBER') {
+        sightings.sort((first, second) => Number(first[attr]) - Number(second[attr])); }
+      else {
+        sightings.sort((a, b) => (a[attr] >= b[attr] ? 1 : -1));
+      }
+    }
     res.render('index', data);
   });
 };
@@ -59,10 +67,6 @@ const handleIndexYear = (req, res) => {
     sightings.forEach((sight) => {
       const yearStr = sight.YEAR;
       const yearNum = Number(yearStr);
-
-      if (yearNum < 10 || yearNum === 20010) {
-        console.log(sight);
-      }
 
       if (!Number.isNaN(yearNum) && yearStr != null) {
         yearSet.add(yearNum);
