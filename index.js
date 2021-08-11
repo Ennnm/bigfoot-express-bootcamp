@@ -13,6 +13,14 @@ const sightingText = (year, state, observed) => `
         <li> Observed: ${observed}</li>
         </ul>
     `;
+
+function extractNumbers(str) {
+  const m = /(^|\s)(\d{4})(\s|$)/.exec(str);
+  if (m) {
+    return Number(m[2]);
+  }
+  return NaN;
+}
 const handleIncomingRequest = (request, response) => {
   read('data.json', (err, data) => {
     const { index } = request.params;
@@ -29,7 +37,7 @@ const handleYear = (req, res) => {
     const sightingByYear = sightings.filter((sight) => sight.YEAR === req.params.year.toString());
     sightingByYear.forEach((sight) => {
       yearlyReport += sightingText(
-        sight.YEAR,
+        sight.YEAR = extractNumbers(sight.YEAR),
         sight.STATE,
         sight.OBSERVED,
       );
@@ -46,6 +54,7 @@ const handleIndex = (req, res) => {
     const { sightings } = data;
     sightings.forEach((sighting, i) => {
       sighting.index = i;
+      sighting.YEAR = extractNumbers(sighting.YEAR);
     });
     if (attr) {
       attr = attr.toUpperCase();
@@ -87,10 +96,50 @@ const addHandler = (req, res) => {
     });
   });
 };
+const checkABNaN = (a, b) => {
+  if (Number.isNaN(a)) {
+    return 1;
+  }
+  if (Number.isNaN(b)) {
+    return -1;
+  }
+  return 0;
+};
+const handleSightingByYr = (req, res) => {
+  const sortOrder = req.query.sort;
+  read('data.json', (err, data) => {
+    const { sightings } = data;
+    sightings.forEach((sighting, i) => {
+      sighting.index = i;
+      sighting.YEAR = extractNumbers(sighting.YEAR);
+    });
+    if (sortOrder === 'asc') {
+      sightings.sort((a, b) => {
+        const aYear = a.YEAR;
+        const bYear = b.YEAR;
+        const ABcheck = checkABNaN(aYear, bYear);
+        if (ABcheck === 0) return aYear - bYear;
+        return ABcheck;
+      });
+    }
+    else if (sortOrder === 'desc') {
+      sightings.sort((a, b) => {
+        const aYear = a.YEAR;
+        const bYear = b.YEAR;
+        const ABcheck = checkABNaN(aYear, bYear);
+        if (ABcheck === 0) return bYear - aYear;
+        return ABcheck;
+      });
+    }
+    data.sighting = sightings;
+    res.render('year-sightings', data);
+  });
+};
 // index is a URL path parameter
 app.get('/sightings/:index', handleIncomingRequest);
 app.get('/year-sightings/:year', handleYear);
 app.get('/', handleIndex);
 app.get('/year', handleIndexYear);
 app.post('/submit', addHandler);
+app.get('/year-sightings', handleSightingByYr);
 app.listen(3004);
