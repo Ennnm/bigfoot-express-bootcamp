@@ -1,8 +1,9 @@
-import express from 'express';
-import { read } from './jsonFileStorage.mjs';
+import express, { urlencoded } from 'express';
+import { read, add } from './jsonFileStorage.mjs';
 
 const app = express();
 app.set('view engine', 'ejs');
+app.use(urlencoded({ extended: false }));
 
 const sightingText = (year, state, observed) => `
         <h1 style="text-align: center">Big Foot Sighting</h1>
@@ -14,7 +15,6 @@ const sightingText = (year, state, observed) => `
     `;
 const handleIncomingRequest = (request, response) => {
   read('data.json', (err, data) => {
-    console.log(data.sightings.length);
     const { index } = request.params;
     const refSight = data.sightings[index];
     const content = sightingText(refSight.YEAR, refSight.STATE, refSight.OBSERVED);
@@ -79,9 +79,18 @@ const handleIndexYear = (req, res) => {
     res.render('years', yearObj);
   });
 };
+const addHandler = (req, res) => {
+  add('data.json', 'sightings', req.body, (msg) => { console.log(msg);
+    read('data.json', (err, data) => {
+      const { sightings } = data;
+      res.redirect(`/sightings/${sightings.length - 1}`);
+    });
+  });
+};
 // index is a URL path parameter
 app.get('/sightings/:index', handleIncomingRequest);
 app.get('/year-sightings/:year', handleYear);
 app.get('/', handleIndex);
 app.get('/year', handleIndexYear);
+app.post('/submit', addHandler);
 app.listen(3004);

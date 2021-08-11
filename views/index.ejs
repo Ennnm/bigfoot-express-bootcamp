@@ -1,6 +1,21 @@
 <html>
   <body>
     <ul>
+      <form action="/submit" method="POST">
+        <h1>Sighting</h1>
+        <label for="YEAR">Year</label><br />
+        <input type="text" name="YEAR" id="YEAR" /><br />
+
+        <label for="SEASON">Season</label><br />
+        <input type="text" name="SEASON" id="SEASON" /><br />
+
+        <label for="COUNTY">County</label><br />
+        <input type="text" name="COUNTY" id="COUNTY" /><br />
+
+        <label for="STATE">State</label><br />
+        <input type="text" name="STATE" id="STATE" /><br />
+        <input type="submit" value="Submit" />
+      </form>
       <a href="/?sortBy=year">Sort by Year</a>
       <a href="/?sortBy=season">Sort by Season</a>
       <a href="/?sortBy=county">Sort by County</a>
